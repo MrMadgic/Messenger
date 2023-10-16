@@ -1,0 +1,12 @@
+@use '/public/assets/styles/abstracts/colors';
+
+.Layout {
+  height: 100%;
+  background: colors.$primary;
+}
+
+.Wrapper {
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}

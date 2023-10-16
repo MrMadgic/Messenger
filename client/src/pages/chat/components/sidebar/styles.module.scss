@@ -1,0 +1,22 @@
+.Sidebar {
+  width:260px;
+  padding: 20px;
+}
+
+.Dialog {
+  margin: 20px 0;
+  gap: 1.2rem;
+
+  .Info {
+    // margin-left: 8px;
+    width: 55%;
+    
+    .Message {
+      p {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+  }
+}

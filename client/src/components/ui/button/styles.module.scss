@@ -1,0 +1,12 @@
+@use '/public/assets/styles/abstracts/colors';
+
+.Button {
+  background: none;
+  padding: 15px 0;
+  border-radius: 1rem;
+
+  &.primary {
+    background: colors.$primary-modified;
+    color: colors.$snow !important;
+  }
+}

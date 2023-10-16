@@ -1,0 +1,23 @@
+@use '/public/assets/styles/abstracts/colors';
+
+.Logo {
+  gap: 1rem;
+
+  img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+  }
+}
+
+.Nav {
+  gap: 1rem;
+
+  .Active {
+    border-bottom: 1px solid colors.$accent;
+  }
+}
+
+.Actions {
+  gap: 1.5rem
+}

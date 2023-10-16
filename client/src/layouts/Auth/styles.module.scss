@@ -1,0 +1,52 @@
+@use '/public/assets/styles/abstracts/colors';
+
+.Layout {
+  width: 100vw;
+  height: 100vh;
+  background: colors.$primary;
+}
+
+.Wrap {
+  padding: 2rem;
+  background-color: colors.$snow;
+  border-radius: 8px;
+  border: 3px solid colors.$primary-modified;
+  width: 650px;
+  height: 320px;
+  gap: 1rem;
+
+  * {
+    color: colors.$dark !important;
+  }
+}
+
+.Tabs {
+  display: flex;
+  gap: 1.2rem;
+  border-bottom-width: 2px;
+
+  a {
+    border-bottom: 2px solid transparent;
+  }
+
+  .Active {
+    padding-bottom: 5px;
+    border-bottom: 2px solid red;
+    transition: .1s ease;
+  }
+}
+
+.Logo {
+  display: flex;
+  align-items: center;
+  img {
+    width: 124px;
+    height: 124px;
+    object-fit: cover;
+  }
+}
+
+.Content {
+  gap: 3rem;
+  height: 100%;
+}

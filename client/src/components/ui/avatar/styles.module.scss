@@ -1,0 +1,12 @@
+@use '/public/assets/styles/abstracts/colors';
+
+.Avatar {
+  user-select: none;
+  background: colors.$accent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  p {
+    color: colors.$snow;
+  }
+}

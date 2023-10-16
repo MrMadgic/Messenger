@@ -1,0 +1,32 @@
+@forward './reset';
+@forward './typograpgy';
+
+.flex {
+  display: flex;
+
+  .col {
+    flex-direction: column;
+  }
+
+  &, &.col {
+    &.items-center {
+      align-items: center;
+    }
+
+    &.justify-between {
+      justify-content: space-between;
+    }
+
+    &.justify-center {
+      justify-content: center;
+    }
+  }
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.hidden {
+  display: none;
+}
