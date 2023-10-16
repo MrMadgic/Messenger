@@ -62,7 +62,7 @@ async function routes(fastify: any) {
       }
 
       await prisma.user.update({
-        where: { id: '6524479d45bfd5f7097affe9' },
+        where: { id: '652832446c9f4b480e9ae836' },
         data: req.body,
       })
       return Exception.Created('User has been updated!')

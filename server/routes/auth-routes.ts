@@ -17,6 +17,8 @@ async function routes(fastify: any) {
       }>,
       reply: FastifyReply
     ) => {
+      fastify.replyErrorInstance(reply)
+
       const { email, name, password } = req.body
       const candidate = await prisma.user.findFirst({
         where: {
@@ -24,13 +26,15 @@ async function routes(fastify: any) {
         },
       })
       if (candidate) {
-        reply.send({ message: 'User is exist', code: 403 })
+        console.log(candidate)
+        fastify.forbidden('User is exist')
+        reply.send({ message: '', code: 403 })
       } else {
         const passwordHash = await fastify.bcrypt.hash(password, 12)
         await prisma.user.create({
           data: { email, name, password: passwordHash },
         })
-        reply.send({ message: 'User has been created', code: 201 })
+        fastify.created('User has been created')
       }
     }
   )
@@ -43,8 +47,11 @@ async function routes(fastify: any) {
           login: string
           password: string
         }
-      }>
+      }>,
+      reply: FastifyReply
     ) => {
+      fastify.replyErrorInstance(reply)
+
       const { login, password } = req.body
       const candidate = await prisma.user.findFirst({
         where: {
@@ -52,19 +59,19 @@ async function routes(fastify: any) {
         },
       })
       if (!candidate) {
-        return { message: 'User not exist', code: 403 }
+        fastify.forbidden('User not exist')
+      } else {
+        const passwordDecode = await fastify.bcrypt.compare(
+          password,
+          candidate.password
+        )
+        if (!passwordDecode) {
+          fastify.forbidden('NOT CORRECT PASSWORD')
+        }
+        const { password: userPassword, ...publicData } = candidate
+        req.session.set('session', candidate.id)
+        return publicData
       }
-
-      const passwordDecode = await fastify.bcrypt.compare(
-        password,
-        candidate.password
-      )
-      if (!passwordDecode) {
-        return { message: 'NOT CORRECT PASSWORD' }
-      }
-      const { password: userPassword, ...publicData } = candidate
-      req.session.set('session', candidate.id)
-      return publicData
     }
   )
 

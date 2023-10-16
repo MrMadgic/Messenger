@@ -10,6 +10,7 @@ import uuid from 'fastify-uuid'
 import authPlugin from './plugins/auth'
 import cloudinaryPlugin from './plugins/cloudinary'
 import connector from './plugins/connector'
+import errorPlugin from './plugins/error'
 
 import authRoutes from './routes/auth-routes'
 import chatRoutes from './routes/chat-routes'
@@ -57,6 +58,7 @@ fastify.register(session, {
 fastify.register(connector)
 fastify.register(cloudinaryPlugin)
 fastify.register(authPlugin)
+fastify.register(errorPlugin)
 
 fastify.register(authRoutes, { prefix: 'auth' })
 fastify.register(userRoutes, { prefix: 'user' })
