@@ -1,0 +1,48 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit !important;
+}
+
+.wrapper {
+  background-color: #2f3b4b;
+  min-height: 100vh;
+  padding: 25px 60px;
+}
+
+
+.section-box{
+  width: 100%;
+  min-height: 75vh;
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px 20px;
+}
+
+.spinner-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  width: 100%;
+}
+
+.spinner-border{
+  width: 6rem;
+  height: 6rem;
+}

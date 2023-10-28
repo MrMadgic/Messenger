@@ -1,0 +1,5 @@
+export const SETAUTHSTATUS = 'SET_AUTH_STATUS';
+export const LOADDIALOGS = 'LOAD_DIALOGS';
+export const SELECTDIALOG = 'SELECT_DIALOG';
+export const SENDMESSAGE = 'SEND_MESSAGE';
+export const SETUSERDATA = 'SET_USER_DATA';

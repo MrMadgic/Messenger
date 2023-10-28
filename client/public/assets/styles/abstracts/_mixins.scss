@@ -1,9 +1,0 @@
-@use "colors";
-
-@mixin colors {
-  @each $color in colors.$theme-colors {
-    &.#{nth($color, 1)} {
-      background: nth($color, 2);
-    }
-  }
-}
