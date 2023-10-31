@@ -8,4 +8,3 @@ export const SETUSERLOGIN = 'SET_USER_LOGIN';
 export const SETNEWDIALOG = 'SET_NEW_DIALOG';
 export const SETMESSAGES = 'SET_MESSAGES';
 export const SETDIALOGS = 'SET_DIALOGS';
-
