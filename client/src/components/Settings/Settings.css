@@ -1,0 +1,43 @@
+.settings-container {
+  display: flex;
+}
+
+.settings-sidebar {
+  width: 200px;
+  border-right: 1px solid #ccc;
+}
+
+.settings-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.settings-sidebar li {
+  cursor: pointer;
+  padding: 10px;
+}
+
+.settings-sidebar li:hover {
+  background-color: #f0f0f0;
+}
+
+.selected {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.settings-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.row > .col-md-3 {
+  padding-right: 0;
+}
+.row > .col-md-9 {
+  padding-left: 0;
+}
+
+.button-container {
+    margin-top: 20px;
+}
