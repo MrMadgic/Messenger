@@ -1,4 +1,4 @@
-import { LOADDIALOGS, SETUSERLOGIN, SELECTDIALOG, SENDMESSAGE, SETAUTHSTATUS, SETUSERDATA, SETUSERSETTINGS, SETNEWDIALOG, SETMESSAGES, SETDIALOGS } from "../../types";
+import { LOADDIALOGS, CLAERDIALOGS, CHECKEXISTSDIALOGS, SETUSERLOGIN, SELECTDIALOG, SENDMESSAGE, SETAUTHSTATUS, SETUSERDATA, SETUSERSETTINGS, SETNEWDIALOG, SETMESSAGES, SETDIALOGS, UPDATEDIALOGBYID, MARKMESSAGESASREADLOCALLY } from "../../types";
 
 
 export const setNewDialog = (dialog) => {
@@ -8,10 +8,37 @@ export const setNewDialog = (dialog) => {
   };
 };
 
+export const clearDialogs = () => {
+  return {
+    type: CLAERDIALOGS,
+  };
+};
+
 export const setAuthStatus = (isAuth) => {
   return {
     type: SETAUTHSTATUS,
     isAuth,
+  };
+};
+
+export const checkExistsDialogs = (dialogs) => {
+  return {
+    type: CHECKEXISTSDIALOGS,
+    dialogs,
+  };
+};
+
+export const markMessagesAsReadLocally = (dialogId, userId) => {
+  return {
+    type: MARKMESSAGESASREADLOCALLY,
+    payload: { dialogId, userId },
+  };
+};
+
+export const updatedDialogById = (dialog) => {
+  return {
+    type: UPDATEDIALOGBYID,
+    dialog,
   };
 };
 

@@ -4,7 +4,11 @@ import "./Login.css";
 import { useDispatch, useSelector } from "react-redux";
 import { selectIsAuth, selectServerConfig } from "../../selectors";
 import Cookies from "js-cookie";
-import { setAuthStatus, setUserLogin } from "../../redux/actionCreaters/actionCreater";
+import {
+  setAuthStatus,
+  setUserLogin,
+  clearDialogs
+} from "../../redux/actionCreaters/actionCreater";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -90,11 +94,11 @@ export default function Login() {
             Cookies.set("login", formData.login);
             dispatch(setAuthStatus(true));
             dispatch(setUserLogin(formData.login));
+            dispatch(clearDialogs())
 
             clearErrors();
             clearForm();
 
-            navigate("/messages/");
           } else {
             setErrors({
               login: "",

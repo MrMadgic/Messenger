@@ -4,7 +4,11 @@ import "./Signup.css";
 import { useDispatch, useSelector } from "react-redux";
 import { selectIsAuth, selectServerConfig } from "../../selectors";
 import Cookies from "js-cookie";
-import { setAuthStatus, setUserLogin } from "../../redux/actionCreaters/actionCreater";
+import {
+  clearDialogs,
+  setAuthStatus,
+  setUserLogin,
+} from "../../redux/actionCreaters/actionCreater";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -21,6 +25,8 @@ export default function Signup() {
     emailHave: "",
     password: "",
     confirmPassword: "",
+    emailBlocked: "",
+    loginBlocked: "",
   });
 
   const navigate = useNavigate();
@@ -52,6 +58,8 @@ export default function Signup() {
       emailHave: "",
       password: "",
       confirmPassword: "",
+      emailBlocked: "",
+      loginBlocked: "",
     });
   }
 
@@ -112,8 +120,34 @@ export default function Signup() {
           }
 
           const result = await response.json();
-          console.log(result)
-          if (result?.email) {
+
+          if (result.emailBlocked) {
+            setErrors({
+              login: "",
+              loginHave: "",
+              email: "",
+              password: "",
+              confirmPassword: "",
+              emailHave: "",
+              emailBlocked: "Почта заблокирована",
+              loginBlocked: "",
+            });
+
+            hasError = true;
+          } else if (result?.loginBlocked) {
+            setErrors({
+              login: "",
+              loginHave: "",
+              email: "",
+              password: "",
+              confirmPassword: "",
+              emailHave: "",
+              emailBlocked: "",
+              loginBlocked: "Логин заблокирован",
+            });
+
+            hasError = true;
+          } else if (result?.email) {
             setErrors({
               login: "",
               loginHave: "",
@@ -121,6 +155,8 @@ export default function Signup() {
               password: "",
               confirmPassword: "",
               emailHave: "Почта уже зарегистрирована",
+              emailBlocked: "",
+              loginBlocked: "",
             });
 
             hasError = true;
@@ -132,6 +168,8 @@ export default function Signup() {
               password: "",
               confirmPassword: "",
               emailHave: "",
+              emailBlocked: "",
+              loginBlocked: "",
             });
 
             hasError = true;
@@ -140,13 +178,13 @@ export default function Signup() {
           if (!hasError) {
             Cookies.set("isAuth", true);
             Cookies.set("login", formData.login);
+
             dispatch(setAuthStatus(true));
             dispatch(setUserLogin(formData.login));
+            dispatch(clearDialogs())
 
             clearErrors();
             clearForm();
-
-            navigate("/messages/");
           }
         } catch (error) {
           console.error("Error registering user:", error);
@@ -181,6 +219,9 @@ export default function Signup() {
           {errors.loginHave && (
             <div className="text-danger">{errors.loginHave}</div>
           )}
+          {errors.loginBlocked && (
+            <div className="text-danger">{errors.loginBlocked}</div>
+          )}
         </div>
 
         <div className="mb-3">
@@ -200,6 +241,9 @@ export default function Signup() {
           {errors.email && <div className="text-danger">{errors.email}</div>}
           {errors.emailHave && (
             <div className="text-danger">{errors.emailHave}</div>
+          )}
+          {errors.emailBlocked && (
+            <div className="text-danger">{errors.emailBlocked}</div>
           )}
         </div>
 

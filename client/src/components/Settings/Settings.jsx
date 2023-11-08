@@ -87,41 +87,6 @@ export default function Settings() {
     }
   }, [isAuth, navigate]);
 
-  async function fetchData(updatedUserData) {
-    try {
-      const response = await fetch(
-        `${serverConfig.host}${serverConfig.port}/changeUserData`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedUserData),
-        }
-      );
-
-      if (!response.ok) {
-        throw Error("Network response was not ok");
-      }
-
-      const result = await response.json();
-
-      if (result?.message) {
-        dispatch(setUserData(updatedUserData));
-        setIsSaved(true); 
-
-        Cookies.set("login", updatedUserData?.login);
-        dispatch(setUserLogin(updatedUserData?.login));
-
-        setTimeout(() => {
-          setIsSaved(false);
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Error change user settings:", error);
-    }
-  }
-  
   const handleSaveChanges = async (e) => {
     e.preventDefault();
 
@@ -129,7 +94,33 @@ export default function Settings() {
       return;
     }
 
-    const updatedUserData = {
+    let avatarURL = user.avatarURL;
+    if (selectedImage) {
+      const avatarData = new FormData();
+      avatarData.append("avatar", selectedImage);
+
+      try {
+        const avatarResponse = await fetch(
+          `${serverConfig.host}${serverConfig.port}/setUserAvatar`,
+          {
+            method: "POST",
+            body: avatarData,
+          }
+        );
+
+        if (avatarResponse.ok) {
+          const result = await avatarResponse.json();
+          console.log(result)
+          avatarURL = result.url; 
+        } else {
+          console.error("Error uploading avatar:", avatarResponse);
+        }
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+      }
+    }
+
+    const userData = {
       oldLogin: user.login,
       login: newLogin,
       password: newPassword,
@@ -137,10 +128,40 @@ export default function Settings() {
       firstName: newFirstName,
       lastName: newLastName,
       bio: newBio,
-      avatar: selectedImage,
+      avatarURL,
     };
 
-    fetchData(updatedUserData);
+    try {
+      const userDataResponse = await fetch(
+        `${serverConfig.host}${serverConfig.port}/changeUserData`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        }
+      );
+
+      if (userDataResponse.ok) {
+        const result = await userDataResponse.json();
+        if (result?.message) {
+          dispatch(setUserData(userData));
+          setIsSaved(true);
+
+          Cookies.set("login", userData.login);
+          dispatch(setUserLogin(userData.login));
+
+          setTimeout(() => {
+            setIsSaved(false);
+          }, 2000);
+        }
+      } else {
+        console.error("Error changing user settings:", userDataResponse);
+      }
+    } catch (error) {
+      console.error("Error changing user settings:", error);
+    }
   };
 
   const handleImageChange = (e) => {

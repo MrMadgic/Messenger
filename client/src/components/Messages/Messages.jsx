@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { useSelector, useDispatch } from "react-redux";
 import {
   selectDialog,
   sendMessage,
-  setMessages,
   setNewDialog,
 } from "../../redux/actionCreaters/actionCreater";
 import { useParams, useNavigate } from "react-router-dom";
 
-import telegramLogo from "../../assets/image/telegram_logo.png";
+import DialogList from "./DialogList.jsx";
+import Chat from "./Chat";
 
 import "./Messages.css";
 import { selectIsAuth, selectServerConfig } from "../../selectors";
 
 const socket = io.connect(`http://localhost:4000`);
 
-export default function Messages() {
+export default function Messages({ getUserData }) {
   const dialogs = useSelector((state) => state.user.dialogs);
   const user = useSelector((state) => state.user);
 
@@ -33,7 +33,11 @@ export default function Messages() {
   const [message, setMessage] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState(dialogs);
+  const [adminOptionsVisible, setAdminOptionsVisible] = useState(false);
 
+  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFileURL, setSelectedFileURL] = useState(null);
 
   const serverConfig = useSelector(selectServerConfig);
 
@@ -45,32 +49,21 @@ export default function Messages() {
     const dialogExist = isDialogExist(dialogs, Number(id));
 
     if (id && dialogExist) {
-      socket.emit("join_room", id);
-      const res = await fetch(
-        `${serverConfig.host}${serverConfig.port}/getRoomMessages`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
-        }
-      );
-
-      const resJson = await res.json();
-
-      dispatch(setMessages(resJson));
+      socket.emit("join_room", { id, userId: user.id });
     }
+
+    window.addEventListener("beforeunload", () => {
+      socket.emit("join_room", { id: null, userId: user.id });
+    });
   };
 
   useEffect(() => {
-    console.log("joinRoom");
     joinRoom();
   }, [id, socket]);
 
   useEffect(() => {
-    setSearchResults(dialogs)
-  }, [dialogs])
+    setSearchResults(dialogs);
+  }, [dialogs]);
 
   useEffect(() => {
     if (!isAuth) {
@@ -91,7 +84,6 @@ export default function Messages() {
 
   useEffect(() => {
     const handleReceiveMessage = (data) => {
-
       const existingDialog = dialogs.find(
         (dialog) => dialog.login === data.sender
       );
@@ -157,37 +149,38 @@ export default function Messages() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
     } catch (error) {
       console.error("Error user:", error);
     }
   }
-
 
   const handleDialogClick = (dialog) => {
     const existingDialog = isDialogExist(dialogs, dialog.id);
 
     if (!selectedDialog && !existingDialog) {
       const generatedId = Number(user.id) + Number(dialog.id);
-      const newDialog = { ...dialog, id: generatedId, ownerId: user.id, room: generatedId }
-      
-      setUserDialog(newDialog)
+
+      const newDialog = {
+        ...dialog,
+        id: generatedId,
+        ownerId: user.id,
+        userId: dialog.id,
+      };
+
+      setUserDialog(newDialog);
 
       dispatch(setNewDialog(newDialog));
       dispatch(selectDialog(newDialog));
 
       navigate(`/messages/${generatedId}`);
-      
-      dialogs.push(newDialog)
 
-      setSearchResults(dialogs)
-      setSearchText("")
-      
+      dialogs.push(newDialog);
+
+      setSearchResults(dialogs);
+      setSearchText("");
     } else {
       navigate(`/messages/${dialog.id}`);
     }
-
-    // socket.emit("select_dialog", dialog);
   };
 
   useEffect(() => {
@@ -202,21 +195,45 @@ export default function Messages() {
       return;
     }
 
-    if (message.trim() === "") return;
+    if (message.trim() === "" && !selectedFileURL) {
+      return;
+    }
 
     const sender = user.login;
     const timestamp = new Date();
+    const isDoc = !!selectedFileURL;
+
     const newMessage = {
-      text: message,
-      sender,
-      timestamp,
-      room: String(selectedDialog.id),
+      forSever: {
+        text: isDoc ? null : message,
+        sender,
+        timestamp,
+        room: String(selectedDialog.id),
+        ownerId: selectedDialog.ownerId,
+        userId: selectedDialog.userId,
+        senderId: user.id,
+        isDoc,
+        docURL: isDoc ? selectedFileURL : null,
+      },
+      forMessage: {
+        text: isDoc ? null : message,
+        sender,
+        timestamp,
+        room: String(selectedDialog.id),
+        owner_id: selectedDialog.ownerId,
+        user_id: selectedDialog.userId,
+        sender_id: user.id,
+        is_doc: isDoc,
+        doc_url: isDoc ? selectedFileURL : null,
+      },
     };
 
-    dispatch(sendMessage(newMessage));
-    socket.emit("send_message", newMessage);
+    dispatch(sendMessage(newMessage.forMessage));
+    socket.emit("send_message", newMessage.forSever);
 
     setMessage("");
+    setSelectedFile(null);
+    setSelectedFileURL(null);
   };
 
   const getStatusColor = (isOnline) => {
@@ -243,7 +260,7 @@ export default function Messages() {
       );
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw Error("Network response was not ok");
       }
 
       const result = await response.json();
@@ -276,6 +293,37 @@ export default function Messages() {
     }
   };
 
+  const handleAdminOptionsClick = () => {
+    setAdminOptionsVisible(!adminOptionsVisible);
+  };
+
+  const handleSelectFile = async (document) => {
+    const docData = new FormData();
+    docData.append("document", document);
+
+    try {
+      const response = await fetch(
+        `${serverConfig.host}${serverConfig.port}/sendDocument`,
+        {
+          method: "POST",
+          body: docData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (result) {
+        setSelectedFileURL(result.url);
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+    }
+  };
+
+  const handleAdminOptionClose = () => {
+    setAdminOptionsVisible(false);
+  };
+
   return (
     <div className="container mt-4">
       <>
@@ -287,168 +335,32 @@ export default function Messages() {
           </div>
         ) : (
           <div className="row">
-            <div className="col-md-4">
-              <div className="card">
-                <div className="card-header">
-                  <input
-                    type="text"
-                    className="form-control mb-3"
-                    placeholder="Поиск"
-                    value={searchText}
-                    onChange={handleSearch}
-                  />
-                </div>
-                <div className="card-body">
-                  <ul className="list-group">
-                    {searchResults?.map((result, id) => (
-                      <li
-                        key={id}
-                        className={`list-group-item ${
-                          result === selectedDialog ? "active" : ""
-                        }`}
-                        onClick={() => handleDialogClick(result)}
-                      >
-                        <div className="dialog-info">
-                          <div className="avatar-block">
-                            <img
-                              src={result?.avatarURL}
-                              alt={result?.login}
-                              className="avatar"
-                            />
-                            <div
-                              className="status-circle"
-                              style={{
-                                backgroundColor: getStatusColor(
-                                  result?.isOnline
-                                ),
-                              }}
-                            ></div>
-                          </div>
-                          <div className="dialog-text">
-                            <div className="name-time">
-                              {result && result.login !== undefined
-                                ? result.login
-                                : null}
-                              <span className="message-timestamp text-muted">
-                                {result &&
-                                result.messages &&
-                                result.messages.length > 0 &&
-                                result.messages[result.messages.length - 1] &&
-                                result.messages[result.messages.length - 1]
-                                  .timestamp !== undefined
-                                  ? formatTimestamp(
-                                      result.messages[
-                                        result.messages.length - 1
-                                      ].timestamp
-                                    )
-                                  : null}
-                              </span>
-                            </div>
-
-                            <div className="message-text">
-                              {result &&
-                              result.messages &&
-                              result.messages.length > 0 &&
-                              result.messages[result.messages.length - 1] &&
-                              result.messages[result.messages.length - 1]
-                                .text !== undefined
-                                ? result.messages[result.messages.length - 1]
-                                    .text.length > 40
-                                  ? `${result.messages[
-                                      result.messages.length - 1
-                                    ].text.slice(0, 40)}...`
-                                  : result.messages[result.messages.length - 1]
-                                      .text
-                                : ""}
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-8">
-              {selectedDialog ? (
-                <div className="card card-chat">
-                  <div className="card-header text-center">
-                    {selectedDialog.login}
-                    {selectedDialog.isOnline ? (
-                      <span className="small">онлайн</span>
-                    ) : (
-                      <span className="small">не в сети</span>
-                    )}
-                  </div>
-                  <div
-                    className="card-body message-list"
-                    style={{ overflow: "auto", maxHeight: "400px" }}
-                  >
-                    {selectedDialog.messages.map((msg, index) => (
-                      <div className="messages" key={index}>
-                        <div className="avatar-block">
-                          <img
-                            src={
-                              msg.sender === "me"
-                                ? user.avatarURL
-                                : selectedDialog.avatarURL
-                            }
-                            alt={
-                              msg.sender === "me"
-                                ? user.login
-                                : selectedDialog.login
-                            }
-                            className="avatar"
-                          />
-                        </div>
-                        <div
-                          className={`message mb-2 p-2 ${
-                            msg.sender === "me" ? "sent" : "received"
-                          }`}
-                        >
-                          <div
-                            className={`message-content ${
-                              msg.sender === "me" ? "text-right" : ""
-                            }`}
-                          >
-                            <div className="message-sender">
-                              {msg.sender === "me" ? user.login : msg.sender}
-                              <span className="message-timestamp text-muted">
-                                {formatTimestamp(msg.timestamp)}
-                              </span>
-                            </div>
-                            {msg.text}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="card-footer">
-                    <div className="input-group">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Введите сообщение"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      />
-                      <div className="input-group-append">
-                        <img
-                          onClick={handleSendMessage}
-                          src={telegramLogo}
-                          alt=""
-                          className="btn-send"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="alert alert-info mt-3">
-                  Выберите диалог, чтобы начать чат
-                </div>
-              )}
-            </div>
+            <DialogList
+              searchResults={searchResults}
+              selectedDialog={selectedDialog}
+              handleDialogClick={handleDialogClick}
+              searchText={searchText}
+              handleSearch={handleSearch}
+              getStatusColor={getStatusColor}
+              formatTimestamp={formatTimestamp}
+            />
+            <Chat
+              handleSelectFile={handleSelectFile}
+              selectedDialog={selectedDialog}
+              message={message}
+              setMessage={setMessage}
+              handleSendMessage={handleSendMessage}
+              user={user}
+              formatTimestamp={formatTimestamp}
+              handleAdminOptionClose={handleAdminOptionClose}
+              handleAdminOptionsClick={handleAdminOptionsClick}
+              serverConfig={serverConfig}
+              getUserData={getUserData}
+              setSelectedFile={setSelectedFile}
+              selectedFile={selectedFile}
+              fileInputRef={fileInputRef}
+              adminOptionsVisible={adminOptionsVisible}
+            />
           </div>
         )}
       </>
