@@ -1,0 +1,10 @@
+node_modules
+package-lock.json
+chromedriver
+build
+.vscode
+__pycache__
+.git
+.mp4
+.rar
+create_wallet
