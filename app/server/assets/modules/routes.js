@@ -1,10 +1,7 @@
 const connection = require('../database/db.js');
-const fs = require('fs');
-
 
 function generateRandomUserId() {
-    const randomUserId = Math.floor(1 + Math.random() * 9).toString() + Math.random().toString().slice(2, 12);
-    return randomUserId;
+    return Math.floor(1 + Math.random() * 9).toString() + Math.random().toString().slice(2, 12);
 }
 
 function register(req, res) {
