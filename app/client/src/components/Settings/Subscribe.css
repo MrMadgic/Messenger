@@ -1,0 +1,12 @@
+.paypal-button-row {
+  background-color: red;
+}
+
+.paypal-button-tagline {
+  display: none !important;
+  overflow: hidden !important;
+}
+
+.card-body{
+    max-width: 700px;
+}

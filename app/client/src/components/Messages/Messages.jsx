@@ -13,6 +13,7 @@ import Chat from "./Chat";
 
 import "./Messages.css";
 import { selectIsAuth, selectServerConfig } from "../../selectors";
+import CreateNewGroup from "./CreateNewGroup/CreateNewGroup.jsx";
 
 const socket = io.connect(`http://localhost:4000`);
 
@@ -31,9 +32,13 @@ export default function Messages({ getUserData }) {
   const selectedDialog = dialogs.find((dialog) => dialog.id === parseInt(id));
 
   const [message, setMessage] = useState("");
+  const [groupLimit, setGroupLimit] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [searchResults, setSearchResults] = useState(dialogs);
-  const [adminOptionsVisible, setAdminOptionsVisible] = useState(false);
+  const [localSearchResults, setLocalSearchResults] = useState(dialogs);
+  const searchRef = useRef(null);
+
+  const [groupOptionsVisible, setGroupOptionsVisible] = useState(false);
+  const [createNewGroup, setCreateNewGroup] = useState(false);
 
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -47,9 +52,13 @@ export default function Messages({ getUserData }) {
 
   const joinRoom = async () => {
     const dialogExist = isDialogExist(dialogs, Number(id));
-
     if (id && dialogExist) {
-      socket.emit("join_room", { id, userId: user.id });
+      socket.emit("join_room", {
+        type: selectedDialog?.type,
+        id,
+        userId: user.id,
+        messages: selectedDialog?.messages,
+      });
     }
 
     window.addEventListener("beforeunload", () => {
@@ -62,7 +71,9 @@ export default function Messages({ getUserData }) {
   }, [id, socket]);
 
   useEffect(() => {
-    setSearchResults(dialogs);
+    if (!searchText) {
+      setLocalSearchResults(dialogs);
+    }
   }, [dialogs]);
 
   useEffect(() => {
@@ -82,32 +93,33 @@ export default function Messages({ getUserData }) {
     }
   }, [selectedDialog, navigate]);
 
-  useEffect(() => {
-    const handleReceiveMessage = (data) => {
-      const existingDialog = dialogs.find(
-        (dialog) => dialog.login === data.sender
-      );
+  // useEffect(() => {
+  //   const handleReceiveMessage = (data) => {
+  //     console.log(data.sender)
+  //     const existingDialog = dialogs.find(
+  //       (dialog) => dialog.login === data.sender
+  //     );
 
-      if (!existingDialog) {
-        const newDialog = {
-          login: data.sender,
-          id: data.room,
-          isOnline: false,
-          messages: [data],
-        };
+  //     if (!existingDialog) {
+  //       const newDialog = {
+  //         login: data.sender,
+  //         id: data.room,
+  //         isOnline: false,
+  //         messages: [data],
+  //       };
 
-        dispatch(setNewDialog(newDialog));
-      } else {
-        dispatch(sendMessage(data, existingDialog?.id));
-      }
-    };
+  //       dispatch(setNewDialog(newDialog));
+  //     } else {
+  //       dispatch(sendMessage(data, existingDialog?.id));
+  //     }
+  //   };
 
-    socket.on("receive_message", handleReceiveMessage);
+  //   socket.on("receive_message", handleReceiveMessage);
 
-    return () => {
-      socket.off("receive_message", handleReceiveMessage);
-    };
-  }, [dialogs, dispatch, socket]);
+  //   return () => {
+  //     socket.off("receive_message", handleReceiveMessage);
+  //   };
+  // }, [dialogs, dispatch, socket]);
 
   const formatTimestamp = (timestamp) => {
     const currentDate = new Date();
@@ -154,33 +166,89 @@ export default function Messages({ getUserData }) {
     }
   }
 
+  async function setNewUser(data) {
+    try {
+      const response = await fetch(
+        `${serverConfig.host}${serverConfig.port}/setNewUser`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+    } catch (error) {
+      console.error("Error user:", error);
+    }
+  }
+
   const handleDialogClick = (dialog) => {
     const existingDialog = isDialogExist(dialogs, dialog.id);
 
     if (!selectedDialog && !existingDialog) {
       const generatedId = Number(user.id) + Number(dialog.id);
 
-      const newDialog = {
-        ...dialog,
-        id: generatedId,
-        ownerId: user.id,
-        userId: dialog.id,
-      };
+      if (dialog.type === "group") {
+        // const groupLimitStatus = checkGroupLimit(
+        //   [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+        //   dialog?.ownerPremium
+        // );
+        const groupLimitStatus = checkGroupLimit(dialog?.users, dialog?.ownerPremium)
 
-      setUserDialog(newDialog);
+        const newUser = {
+          ...dialog,
+          newUserId: Number(user.id),
+          id: Number(dialog.id),
+        };
 
-      dispatch(setNewDialog(newDialog));
-      dispatch(selectDialog(newDialog));
+        if (!groupLimitStatus) {
+          setNewUser(newUser);
 
-      navigate(`/messages/${generatedId}`);
+          dispatch(setNewDialog(newUser));
+          dispatch(selectDialog(newUser));
 
-      dialogs.push(newDialog);
+          navigate(`/messages/${newUser.id}`);
 
-      setSearchResults(dialogs);
-      setSearchText("");
+          dialogs.push(newUser);
+
+          setLocalSearchResults(dialogs);
+          setSearchText("");
+        } else {
+          setGroupLimit({ groupName: dialog.groupName });
+        }
+      } else {
+        const newDialog = {
+          ...dialog,
+          id: generatedId,
+          ownerId: user.id,
+          userId: dialog.id,
+        };
+
+        setUserDialog(newDialog);
+
+        dispatch(setNewDialog(newDialog));
+        dispatch(selectDialog(newDialog));
+
+        navigate(`/messages/${generatedId}`);
+
+        dialogs.push(newDialog);
+
+        setLocalSearchResults(dialogs);
+        setSearchText("");
+      }
     } else {
       navigate(`/messages/${dialog.id}`);
     }
+  };
+
+  const handleCreateGroup = () => {
+    navigate(`/messages/`);
+    setCreateNewGroup(!createNewGroup);
   };
 
   useEffect(() => {
@@ -214,6 +282,7 @@ export default function Messages({ getUserData }) {
         senderId: user.id,
         isDoc,
         docURL: isDoc ? selectedFileURL : null,
+        type: selectedDialog?.type,
       },
       forMessage: {
         text: isDoc ? null : message,
@@ -225,6 +294,7 @@ export default function Messages({ getUserData }) {
         sender_id: user.id,
         is_doc: isDoc,
         doc_url: isDoc ? selectedFileURL : null,
+        type: selectedDialog?.type,
       },
     };
 
@@ -246,9 +316,18 @@ export default function Messages({ getUserData }) {
     );
   };
 
+  const checkGroupLimit = (users, havePremium) => {
+    if (!havePremium) {
+      if (users?.length > 9) {
+        return true;
+      }
+      return false;
+    }
+  };
+
   const searchGlobal = async (query) => {
     try {
-      const response = await fetch(
+      const responseUsers = await fetch(
         `${serverConfig.host}${serverConfig.port}/getUsers`,
         {
           method: "POST",
@@ -259,11 +338,22 @@ export default function Messages({ getUserData }) {
         }
       );
 
-      if (!response.ok) {
-        throw Error("Network response was not ok");
-      }
+      const responseGroups = await fetch(
+        `${serverConfig.host}${serverConfig.port}/getGroups`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query }),
+        }
+      );
 
-      const result = await response.json();
+      const users = await responseUsers.json();
+
+      const groups = await responseGroups.json();
+
+      const result = [...users, ...groups];
 
       return result;
     } catch (error) {
@@ -275,11 +365,13 @@ export default function Messages({ getUserData }) {
     const searchText = event.target.value;
     setSearchText(searchText);
 
+    searchRef.current = searchText;
+
     if (searchText.trim() === "") {
-      setSearchResults(dialogs);
+      setLocalSearchResults(dialogs);
     } else {
       const chatResults = searchDialogs(searchText);
-      setSearchResults(chatResults);
+      setLocalSearchResults(chatResults);
 
       if (chatResults.length === 0) {
         const globalResults = await searchGlobal(searchText);
@@ -287,14 +379,15 @@ export default function Messages({ getUserData }) {
         const filteredResults = globalResults.filter(
           (result) => result.id !== user.id
         );
-
-        setSearchResults(filteredResults);
+        if (searchRef.current === searchText) {
+          setLocalSearchResults(filteredResults);
+        }
       }
     }
   };
 
-  const handleAdminOptionsClick = () => {
-    setAdminOptionsVisible(!adminOptionsVisible);
+  const handleGroupOptionsClick = () => {
+    setGroupOptionsVisible(!groupOptionsVisible);
   };
 
   const handleSelectFile = async (document) => {
@@ -320,8 +413,97 @@ export default function Messages({ getUserData }) {
     }
   };
 
-  const handleAdminOptionClose = () => {
-    setAdminOptionsVisible(false);
+  const generateGroup = async (groupImageInfo, groupName, ownerId) => {
+    const groupImage = new FormData();
+    groupImage.append("groupImage", groupImageInfo);
+
+    try {
+      const getAvatarURL = await fetch(
+        `${serverConfig.host}${serverConfig.port}/saveGroupAvatar`,
+        {
+          method: "POST",
+          body: groupImage,
+        }
+      );
+
+      const { url } = await getAvatarURL.json();
+
+      const getGeneratedGroupID = await fetch(
+        `${serverConfig.host}${serverConfig.port}/getGeneratedGroupID`
+      );
+
+      const { id } = await getGeneratedGroupID.json();
+
+      const newGroup = {
+        id,
+        avatarURL: url,
+        login: groupName,
+        ownerId,
+        users: [ownerId],
+        type: "group",
+      };
+
+      await fetch(`${serverConfig.host}${serverConfig.port}/setUserGroup`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newGroup),
+      });
+    } catch (error) {
+      console.error("Error generate group:", error);
+    }
+  };
+
+  const updateGroupInfo = async ({
+    groupImageInfo,
+    groupName,
+    groupId,
+    oldAvatar,
+  }) => {
+    try {
+      let url;
+
+      if (!oldAvatar) {
+        const groupImage = new FormData();
+        groupImage.append("groupImage", groupImageInfo);
+
+        const getAvatarURL = await fetch(
+          `${serverConfig.host}${serverConfig.port}/saveGroupAvatar`,
+          {
+            method: "POST",
+            body: groupImage,
+          }
+        );
+
+        const { url: newUrl } = await getAvatarURL.json();
+        url = newUrl;
+      } else {
+        url = groupImageInfo;
+      }
+
+      const updatedGroupInfo = {
+        avatarURL: url,
+        groupName,
+        groupId,
+      };
+
+      const response = await fetch(
+        `${serverConfig.host}${serverConfig.port}/updateGroupInfo`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedGroupInfo),
+        }
+      );
+
+      return response.json();
+    } catch (error) {
+      console.error("Error updating group:", error);
+    }
   };
 
   return (
@@ -336,7 +518,8 @@ export default function Messages({ getUserData }) {
         ) : (
           <div className="row">
             <DialogList
-              searchResults={searchResults}
+              handleCreateGroup={handleCreateGroup}
+              searchResults={localSearchResults}
               selectedDialog={selectedDialog}
               handleDialogClick={handleDialogClick}
               searchText={searchText}
@@ -345,6 +528,8 @@ export default function Messages({ getUserData }) {
               formatTimestamp={formatTimestamp}
             />
             <Chat
+              groupLimit={groupLimit}
+              getStatusColor={getStatusColor}
               handleSelectFile={handleSelectFile}
               selectedDialog={selectedDialog}
               message={message}
@@ -352,14 +537,20 @@ export default function Messages({ getUserData }) {
               handleSendMessage={handleSendMessage}
               user={user}
               formatTimestamp={formatTimestamp}
-              handleAdminOptionClose={handleAdminOptionClose}
-              handleAdminOptionsClick={handleAdminOptionsClick}
+              handleGroupOptionsClick={handleGroupOptionsClick}
               serverConfig={serverConfig}
               getUserData={getUserData}
               setSelectedFile={setSelectedFile}
               selectedFile={selectedFile}
               fileInputRef={fileInputRef}
-              adminOptionsVisible={adminOptionsVisible}
+              groupOptionsVisible={groupOptionsVisible}
+              updateGroupInfo={updateGroupInfo}
+            />
+            <CreateNewGroup
+              setCreateNewGroup={setCreateNewGroup}
+              status={createNewGroup}
+              setUserDialog={setUserDialog}
+              generateGroup={generateGroup}
             />
           </div>
         )}

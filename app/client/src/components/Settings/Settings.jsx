@@ -9,6 +9,7 @@ import {
 } from "../../redux/actionCreaters/actionCreater";
 import { selectIsAuth, selectServerConfig } from "../../selectors";
 import Cookies from "js-cookie";
+import Subscribe from "./Subscribe";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -110,8 +111,7 @@ export default function Settings() {
 
         if (avatarResponse.ok) {
           const result = await avatarResponse.json();
-          console.log(result)
-          avatarURL = result.url; 
+          avatarURL = result.url;
         } else {
           console.error("Error uploading avatar:", avatarResponse);
         }
@@ -174,6 +174,14 @@ export default function Settings() {
     setSelectedSection("profile");
   };
 
+  const handleThemesLinkClick = () => {
+    setSelectedSection("themes");
+  };
+
+  const handlePremiumLinkClick = () => {
+    setSelectedSection("premium");
+  };
+
   return (
     <>
       {loading ? (
@@ -196,12 +204,20 @@ export default function Settings() {
                   Профиль
                 </li>
                 <li
-                  onClick={() => setSelectedSection("themes")}
+                  onClick={handleThemesLinkClick}
                   className={`list-group-item ${
                     selectedSection === "themes" ? "active" : ""
                   }`}
                 >
                   Темы
+                </li>
+                <li
+                  onClick={handlePremiumLinkClick}
+                  className={`list-group-item ${
+                    selectedSection === "premium" ? "active" : ""
+                  }`}
+                >
+                  Подписка
                 </li>
               </ul>
             </div>
@@ -212,102 +228,105 @@ export default function Settings() {
                 </div>
               )}
               <form>
-                <div className="card">
-                  <div className="card-header">
-                    <h2>Профиль</h2>
+                {selectedSection === "profile" && (
+                  <div className="card">
+                    <div className="card-header">
+                      <h2>Профиль</h2>
+                    </div>
+                    <div className="card-body">
+                      <div className="form-group">
+                        <label htmlFor="newLogin">Логин:</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="newLogin"
+                          value={newLogin}
+                          onChange={(e) => setNewLogin(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newPassword">Пароль:</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          id="newPassword"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          autoComplete="current-password"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newEmail">Email:</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="newEmail"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          autoComplete="username"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newFirstName">Имя:</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="newFirstName"
+                          value={newFirstName}
+                          onChange={(e) => setNewFirstName(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newLastName">Фамилия:</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="newLastName"
+                          value={newLastName}
+                          onChange={(e) => setNewLastName(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newBio">О себе:</label>
+                        <textarea
+                          className="form-control"
+                          id="newBio"
+                          value={newBio}
+                          onChange={(e) => setNewBio(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="newAvatar">Загрузить аватар : </label>
+                        <input
+                          type="file"
+                          id="newAvatar"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </div>
+                      <div className="button-container text-center">
+                        <button
+                          className="btn btn-primary"
+                          onClick={(e) => {
+                            handleSaveChanges(e);
+                          }}
+                        >
+                          Сохранить изменения
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="card-body">
-                    <div className="form-group">
-                      <label htmlFor="newLogin">Логин:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="newLogin"
-                        value={newLogin}
-                        onChange={(e) => setNewLogin(e.target.value)}
-                      />
+                )}
+                {selectedSection === "themes" && (
+                  <div className="card">
+                    <div className="card-header">
+                      <h2>Темы</h2>
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="newPassword">Пароль:</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="newPassword"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        autoComplete="current-password"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="newEmail">Email:</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        id="newEmail"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        autoComplete="username"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="newFirstName">Имя:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="newFirstName"
-                        value={newFirstName}
-                        onChange={(e) => setNewFirstName(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="newLastName">Фамилия:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="newLastName"
-                        value={newLastName}
-                        onChange={(e) => setNewLastName(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="newBio">О себе:</label>
-                      <textarea
-                        className="form-control"
-                        id="newBio"
-                        value={newBio}
-                        onChange={(e) => setNewBio(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="newAvatar">Загрузить аватар : </label>
-                      <input
-                        type="file"
-                        id="newAvatar"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                    </div>
-                    <div className="button-container text-center">
-                      <button
-                        className="btn btn-primary"
-                        onClick={(e) => {
-                          handleSaveChanges(e);
-                        }}
-                      >
-                        Сохранить изменения
-                      </button>
-                    </div>
+                    <div className="card-body"></div>
                   </div>
-                </div>
+                )}
+                {selectedSection === "premium" && <Subscribe />}
               </form>
-              {selectedSection === "themes" && (
-                <div className="card">
-                  <div className="card-header">
-                    <h2>Темы</h2>
-                  </div>
-                  <div className="card-body"></div>
-                </div>
-              )}
             </div>
           </div>
         </div>

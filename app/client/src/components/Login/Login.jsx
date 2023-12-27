@@ -30,7 +30,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuth) {
-      navigate("/messages");
+      navigate("/");
     }
   });
 
@@ -99,6 +99,10 @@ export default function Login() {
             clearErrors();
             clearForm();
 
+            setTimeout(() => {
+            
+              window.location.reload(true)
+            }, 1000);
           } else {
             setErrors({
               login: "",

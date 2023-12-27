@@ -37,7 +37,7 @@ export default function Signup() {
 
   useEffect(() => {
     if (isAuth) {
-      navigate("/messages");
+      navigate("/ ");
     }
   });
 
@@ -185,6 +185,11 @@ export default function Signup() {
 
             clearErrors();
             clearForm();
+
+            setTimeout(() => {
+            
+              window.location.reload(true)
+            }, 1000);
           }
         } catch (error) {
           console.error("Error registering user:", error);

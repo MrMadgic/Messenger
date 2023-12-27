@@ -1,0 +1,17 @@
+label{
+    font-size: 18px;
+}
+
+.popup-body{
+    border-radius: 5px;
+    padding: 15px 15px;
+}
+
+#avatarFile{
+    margin-left: 5px !important;
+}
+
+.create-group > .list-group-item{
+    height: fit-content;
+    min-height: 0px !important;
+}

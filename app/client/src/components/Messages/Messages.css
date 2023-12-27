@@ -22,13 +22,29 @@
 }
 
 .card-header {
+  z-index: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
+  flex-direction: row;
+  position: relative;
 }
 
-.card-header > .small {
+.dots-icon {
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.card-header-admin {
+  position: absolute;
+  right: 10px;
+}
+
+.message-list {
+  position: relative;
+}
+
+.card-header > .card-header-status > .small {
   font-size: 12px;
   font-weight: normal;
   color: rgba(8, 8, 8, 0.459);
@@ -46,6 +62,22 @@
 .message-text {
   font-size: 14px;
   color: #d8d8d8;
+  justify-content: space-between;
+}
+
+.message-text > .message-status > .message-status_wrapper {
+  right: 9px;
+}
+
+.card-header-status {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  word-break: break-all;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  justify-content: space-between;
 }
 
 .avatar-block {
@@ -69,6 +101,7 @@
 
 .avatar-block > .avatar {
   width: 40px;
+  height: 40px;
   border-radius: 20px;
   margin-right: 12px;
 }
@@ -77,9 +110,9 @@
   padding-right: 0px;
 }
 
-.col-md-4 > .card > .card-header > input{
+.col-md-4 > .card > .card-header > input {
   color: white;
-} 
+}
 
 .col-md-8 {
   padding-left: 0px;
@@ -114,6 +147,10 @@
   bottom: -1px;
 }
 
+.list-group {
+  height: 463px;
+}
+
 .list-group-item {
   margin: 0 !important;
   border-radius: 0 !important;
@@ -121,14 +158,16 @@
   border-color: #40475042 !important;
   color: white;
   padding: 17px;
+  min-height: 87px !important;
 }
 
 .input-group > input {
   border: none;
+  background-color: rgba(255, 255, 255, 0);
 }
 
 .input-group > input:focus {
-  background-color: #fff;
+  background-color: #ffffff00;
   border-color: none;
   outline: 0;
   box-shadow: none;
@@ -140,7 +179,36 @@
   justify-content: center;
 }
 
+.input-group-select-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+}
+.btn-select-file {
+  width: 30px;
+  cursor: pointer;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: rgba(255, 255, 255, 0) !important;
+  opacity: 1;
+}
+
+.doc-image > a > img {
+  width: 55px;
+  cursor: pointer;
+}
+
+.doc-image {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .btn-send {
+  cursor: pointer;
   margin-left: 10px;
   display: flex;
   align-items: center;
@@ -149,11 +217,28 @@
 
 .col-md-4 > .card > .card-body {
   padding: 0 !important;
+  overflow: auto;
 }
 
 .col-md-4 > .card {
   background-color: #263242;
-  min-height: 100%;
+  overflow: auto;
+}
+
+.create-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.create-group {
+  width: 100%;
+}
+
+.create-group > .list-group-item:hover {
+  background-color: #263242;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .list-group-item:hover {
@@ -164,6 +249,86 @@
   background-color: #53667542;
 }
 
-.alert-info{
-    margin-top: 0 !important;
+.alert-info {
+  margin-top: 0 !important;
+}
+
+.message-messag {
+  display: flex;
+  word-break: break-all;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  justify-content: space-between;
+}
+
+.message-status {
+  position: relative;
+}
+
+.message-status_wrapper {
+  display: flex;
+  align-items: flex-end;
+  font-size: 14px;
+  position: absolute;
+  bottom: -1px;
+  right: -15px;
+}
+
+.message-status_true {
+  color: rgb(0, 153, 255);
+}
+
+.message-status_false {
+  color: rgba(0, 0, 0, 0.534);
+}
+
+.popup-wrapper {
+  width: 100%;
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.485);
+  z-index: 9000;
+  top: 0;
+  right: 0;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-body {
+  background-color: white;
+  position: relative;
+  padding: 2px 5px;
+}
+
+.close-popup {
+  text-align: right;
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+}
+
+.chat-type {
+  position: absolute;
+  right: 7px;
+  bottom: -10px;
+}
+
+.chat-type > img {
+  width: 20px;
+}
+
+.styled-button {
+  background-color: #263242;
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+}
+
+.card-header-status > .chat-type{
+  position: relative !important;   
+  top: 0;
+  left: 0;
 }
